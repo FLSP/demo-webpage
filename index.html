@@ -52,15 +52,16 @@
             color: #555;
             font-weight: 500;
         }
-        input {
+        input, select {
             width: 100%;
             padding: 14px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
             font-size: 16px;
             transition: border-color 0.3s;
+            background: white;
         }
-        input:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -81,15 +82,17 @@
             font-size: 32px;
             font-weight: bold;
         }
-        .result-value.negative {
-            color: #ff6b6b;
+        .info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>镀层厚度计算器</h1>
-        <div class="formula">log(10<sup>-x/20</sup>) × k</div>
+        <div class="formula">log(10<sup>x/20</sup>) × δ</div>
 
         <div class="input-group">
             <label>EMI降低量（dB）</label>
@@ -97,11 +100,26 @@
         </div>
 
         <div class="input-group">
-            <label>集肤深度（μm）</label>
-            <input type="number" id="kInput" placeholder="请输入k值" step="any">
+            <label>材料</label>
+            <select id="materialSelect">
+                <option value="aluminum">铝</option>
+                <option value="copper">铜</option>
+                <option value="stainless">不锈钢</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>频率（Hz）</label>
+            <input type="number" id="freqInput" placeholder="请输入频率" step="any">
+            <div class="info">常用值：50Hz（电力）、1MHz（射频）</div>
         </div>
 
         <div class="result">
+            <div class="result-label">集肤深度（μm）</div>
+            <div class="result-value" id="skinDepth">—</div>
+        </div>
+
+        <div class="result" style="margin-top: 15px;">
             <div class="result-label">镀层厚度（μm）</div>
             <div class="result-value" id="result">—</div>
         </div>
@@ -109,31 +127,43 @@
 
     <script>
         const xInput = document.getElementById('xInput');
-        const kInput = document.getElementById('kInput');
+        const materialSelect = document.getElementById('materialSelect');
+        const freqInput = document.getElementById('freqInput');
+        const skinDepthDisplay = document.getElementById('skinDepth');
         const resultDisplay = document.getElementById('result');
+
+        // Skin depth coefficients (δ = coeff / sqrt(f) μm)
+        const skinDepthCoeff = {
+            copper: 20120,
+            aluminum: 26740,
+            stainless: 67300
+        };
+
+        function calculateSkinDepth(material, freq) {
+            return skinDepthCoeff[material] / Math.sqrt(freq);
+        }
 
         function calculate() {
             const x = parseFloat(xInput.value);
-            const k = parseFloat(kInput.value);
+            const freq = parseFloat(freqInput.value);
+            const material = materialSelect.value;
 
-            if (isNaN(x) || isNaN(k)) {
+            if (isNaN(x) || isNaN(freq) || freq <= 0) {
+                skinDepthDisplay.textContent = '—';
                 resultDisplay.textContent = '—';
-                resultDisplay.classList.remove('negative');
                 return;
             }
 
-            const result = Math.log10(Math.pow(10, -x / 20)) * k;
-            resultDisplay.textContent = result.toFixed(4);
+            const skinDepth = calculateSkinDepth(material, freq);
+            skinDepthDisplay.textContent = skinDepth.toFixed(2);
 
-            if (result < 0) {
-                resultDisplay.classList.add('negative');
-            } else {
-                resultDisplay.classList.remove('negative');
-            }
+            const result = Math.log10(Math.pow(10, x / 20)) * skinDepth;
+            resultDisplay.textContent = result.toFixed(4);
         }
 
         xInput.addEventListener('input', calculate);
-        kInput.addEventListener('input', calculate);
+        materialSelect.addEventListener('change', calculate);
+        freqInput.addEventListener('input', calculate);
     </script>
 </body>
 </html>
