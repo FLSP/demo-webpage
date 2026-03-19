@@ -92,7 +92,7 @@
 <body>
     <div class="container">
         <h1>镀层厚度计算器</h1>
-        <div class="formula">log(10<sup>x/20</sup>) × δ</div>
+        <div class="formula">ln(10<sup>x/20</sup>) × δ</div>
 
         <div class="input-group">
             <label>EMI降低量（dB）</label>
@@ -157,7 +157,7 @@
             const skinDepth = calculateSkinDepth(material, freq);
             skinDepthDisplay.textContent = skinDepth.toFixed(2);
 
-            const result = Math.log10(Math.pow(10, x / 20)) * skinDepth;
+            const result = Math.log(Math.pow(10, x / 20)) * skinDepth;
             resultDisplay.textContent = result.toFixed(4);
         }
 
